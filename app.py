@@ -1,45 +1,73 @@
 import streamlit as st
+from supabase import create_client
 
-# MUST BE THE FIRST STREAMLIT COMMAND
-st.set_page_config(
-    page_title="TallyTools.in | Master Accounting",
-    page_icon="🎯",
-    layout="wide"
-)
+# Project Connection
+URL = "https://aombczanizdhiulwkuhf.supabase.co"
+KEY = st.secrets["SUPABASE_KEY"]
+supabase = create_client(URL, KEY)
 
-# Custom CSS for a clean "AccountingCoach" look
+st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
+
+# --- CSS for Google-style Profile Icon ---
 st.markdown("""
     <style>
-    .main { background-color: #f8f9fa; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .profile-pic {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: 2px solid #1a73e8;
+        object-fit: cover;
+        float: right;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-def main():
+# --- Top Header with Logo ---
+col1, col2 = st.columns([10, 1])
+with col1:
     st.title("🚀 TallyTools.in")
-    st.subheader("Free Accounting Education & Tally Automation")
-    
-    st.divider()
+with col2:
+    # Placeholder profile image
+    st.markdown('<img src="https://ui-avatars.com/api/?name=User&background=random" class="profile-pic">', unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("### 📖 Learn")
-        st.write("Deep dive into accounting principles, just like a coach.")
-        if st.button("Start Learning"):
-            st.info("Navigate to 'Learning Hub' in the sidebar.")
+# --- Sidebar User Report (Google Style) ---
+with st.sidebar:
+    st.header("Account Report")
+    if 'user' in st.session_state:
+        user = st.session_state['user']
+        
+        # Fetching Plan Details from our Profiles table
+        try:
+            profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
+            p_data = profile.data
+            
+            st.info(f"📧 **Email:**\n{user.email}")
+            st.success(f"👤 **Name:**\n{p_data.get('email').split('@')[0].capitalize()}")
+            
+            with st.expander("💳 Plan & Credits"):
+                st.write(f"**Current Plan:** Free Tier")
+                st.write(f"**Credits Left:** {p_data.get('points')} pts")
+                st.write(f"**Status:** {p_data.get('rank')}")
+                st.progress(p_data.get('points')/1000) # Progress bar for credits
+                
+        except Exception:
+            st.error("Login to view full report.")
+    else:
+        st.warning("No user logged in.")
+        if st.button("Go to Login Page"):
+            st.info("Navigate to 'Account' in the sidebar.")
 
-    with col2:
-        st.markdown("### 🛠️ Automate")
-        st.write("Convert Excel ledgers and vouchers to Tally XML instantly.")
-        if st.button("Open Converter"):
-            st.info("Navigate to 'Tally XML Converter' in the sidebar.")
+# --- Main App Content ---
+st.subheader("Free Accounting Education & Tally Automation")
+st.divider()
 
-    with col3:
-        st.markdown("### 🏆 Progress")
-        st.write("Track your scores and earn certificates.")
-        if st.button("View Dashboard"):
-            st.info("Log in via the 'Account' section.")
-
-if __name__ == "__main__":
-    main()
+col_a, col_b, col_c = st.columns(3)
+with col_a:
+    st.markdown("### 📖 Learn")
+    st.write("Deep dive into accounting principles.")
+with col_b:
+    st.markdown("### 🛠️ Automate")
+    st.write("Convert Excel to Tally XML.")
+with col_c:
+    st.markdown("### 🏆 Progress")
+    st.write("Track your scores.")
