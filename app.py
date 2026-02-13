@@ -2,11 +2,10 @@ import streamlit as st
 from supabase import create_client
 from datetime import datetime, timezone, timedelta
 
-# 1. Secure Project Connection
-URL = "https://aombczanizdhiulwkuhf.supabase.co"
-KEY = st.secrets["SUPABASE_KEY"] 
+# This now connects to your fresh account using the fixed URL
+URL = st.secrets["SUPABASE_URL"]
+KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(URL, KEY)
-
 st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
 
 # 2. UI Styling for Circular Profile Icon
