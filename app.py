@@ -25,6 +25,7 @@ with col1:
     st.title("🚀 TallyTools.in")
 with col2:
     if 'user' in st.session_state:
+        # Initial-based avatar mimicking Google
         initial = st.session_state['user'].email[0].upper()
         st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
 
@@ -34,20 +35,27 @@ with st.sidebar:
     if 'user' in st.session_state:
         user = st.session_state['user']
         try:
+            # This fetches the 100 points you just set up in SQL
             profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
             data = profile.data
+            
             st.markdown(f"📧 **Mail ID:**\n`{user.email}`")
             st.markdown(f"👤 **Name:**\n{user.email.split('@')[0].title()}")
+            
             st.divider()
+            st.markdown("### 💳 Plan Details")
             st.metric("Credits Available", f"{data['points']} pts")
-            st.progress(data['points'] / 100)
+            st.progress(data['points'] / 100) # Progress bar for the 100 initial credits
+            
             if st.button("Sign Out"):
                 supabase.auth.sign_out()
                 del st.session_state['user']
                 st.rerun()
-        except:
-            st.warning("Profile not found in database.")
+        except Exception:
+            # Safety message if SQL wasn't fully applied to your user
+            st.warning("⚠️ Profile not synced. Please re-run the 'Retroactive' part of the SQL script.")
     else:
-        st.info("Please login to see your report.")
+        st.info("Log in to see your account report.")
 
+# Main Page Content
 st.subheader("Free Accounting Education & Tally Automation")
