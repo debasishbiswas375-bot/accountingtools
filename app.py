@@ -1,11 +1,13 @@
 import streamlit as st
 from supabase import create_client
-from datetime import datetime, timezone, timedelta
 
-# This now connects to your fresh account using the fixed URL
+# These names must match your Secrets exactly
 URL = st.secrets["SUPABASE_URL"]
 KEY = st.secrets["SUPABASE_KEY"]
+
+# If the URL is fixed in Step 1, this will no longer crash
 supabase = create_client(URL, KEY)
+
 st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
 
 # 2. UI Styling for Circular Profile Icon
