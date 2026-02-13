@@ -1,17 +1,21 @@
 import streamlit as st
+from supabase import create_client, Client
 
-st.title("👤 My Account")
+# Use your existing Supabase details
+url: str = "https://your-project-url.supabase.co"
+key: str = "your-anon-key" 
+supabase: Client = create_client(url, key)
 
-tab1, tab2 = st.tabs(["Login", "Sign Up"])
+def login_user(email, password):
+    try:
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        return response
+    except Exception as e:
+        st.error(f"Login failed: {e}")
 
-with tab1:
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        st.warning("Database connection (Supabase) required for this step.")
-
-with tab2:
-    st.write("Join 80,000+ members (AccountingCoach style!)")
-    new_email = st.text_input("Register Email")
-    if st.button("Create Account"):
-        st.success("Account created! (Simulation)")
+# Add this to your Account page UI
+if st.button("Login"):
+    user = login_user(email, password)
+    if user:
+        st.success("Logged in successfully!")
+        st.session_state['user'] = user
