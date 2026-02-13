@@ -6,7 +6,7 @@ URL = "https://aombczanizdhiulwkuhf.supabase.co"
 KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(URL, KEY)
 
-# 1. Page Configuration
+# 1. Page Config
 st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
 
 # 2. CSS for Google-style Profile Icon
@@ -26,7 +26,7 @@ with col_h1:
     st.title("🚀 TallyTools.in")
 with col_h2:
     if 'user' in st.session_state:
-        # Initial-based avatar mimicking Google
+        # Google-style initial avatar
         initial = st.session_state['user'].email[0].upper()
         st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
     else:
@@ -38,7 +38,7 @@ with st.sidebar:
     if 'user' in st.session_state:
         user = st.session_state['user']
         try:
-            # Fetches the 100 points created via SQL
+            # This line connects to the SQL table you created
             profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
             data = profile.data
             
@@ -49,30 +49,21 @@ with st.sidebar:
             st.markdown("### 💳 Plan Details")
             st.metric("Credits Available", f"{data['points']} pts")
             st.info(f"**Status:** {data['rank']}")
-            st.progress(data['points'] / 100) # Progress bar for initial 100 credits
+            st.progress(data['points'] / 100)
             
             if st.button("Sign Out"):
                 supabase.auth.sign_out()
                 del st.session_state['user']
                 st.rerun()
         except Exception:
-            st.warning("⚠️ Profile not synced. Ensure you ran the SQL in Supabase.")
+            st.warning("⚠️ Profile data not found. Please refresh the page.")
     else:
         st.info("Log in to see your account report.")
-        if st.button("Go to Login Page"):
-             st.switch_page("pages/03_Account.py")
 
-# 5. Main Page Content
+# 5. Main Content
 st.subheader("Free Accounting Education & Tally Automation")
 st.divider()
-
 c1, c2, c3 = st.columns(3)
-with c1:
-    st.markdown("### 📖 Learning Hub")
-    st.write("Master TallyPrime and Accounting.")
-with c2:
-    st.markdown("### 🛠️ Tally Converter")
-    st.write("Convert Excel/PDF to Tally XML.")
-with c3:
-    st.markdown("### 🏆 My Progress")
-    st.write("Check your credits and certificates.")
+with c1: st.markdown("### 📖 Learning Hub")
+with c2: st.markdown("### 🛠️ Tally Converter")
+with c3: st.markdown("### 🏆 My Progress")
