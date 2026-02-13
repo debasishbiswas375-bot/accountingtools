@@ -6,68 +6,72 @@ URL = "https://aombczanizdhiulwkuhf.supabase.co"
 KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(URL, KEY)
 
-st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
-
-# --- CSS for Google-style Profile Icon ---
+# --- 1. CSS for Google-style Profile Icon ---
 st.markdown("""
     <style>
-    .profile-pic {
+    .google-avatar {
         width: 45px;
         height: 45px;
         border-radius: 50%;
-        border: 2px solid #1a73e8;
+        border: 2px solid #4285F4; /* Google Blue */
         object-fit: cover;
         float: right;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- Top Header with Logo ---
+# --- 2. Top Header with Dynamic Icon ---
 col1, col2 = st.columns([10, 1])
 with col1:
     st.title("🚀 TallyTools.in")
 with col2:
-    # Placeholder profile image
-    st.markdown('<img src="https://ui-avatars.com/api/?name=User&background=random" class="profile-pic">', unsafe_allow_html=True)
+    if 'user' in st.session_state:
+        # Initial-based avatar
+        initial = st.session_state['user'].email[0].upper()
+        st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
+    else:
+        st.markdown('<img src="https://ui-avatars.com/api/?name=?&background=cccccc" class="google-avatar">', unsafe_allow_html=True)
 
-# --- Sidebar User Report (Google Style) ---
+# --- 3. Sidebar User Report ---
 with st.sidebar:
     st.header("Account Report")
     if 'user' in st.session_state:
         user = st.session_state['user']
-        
-        # Fetching Plan Details from our Profiles table
         try:
+            # Fetch real-time data
             profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
-            p_data = profile.data
+            data = profile.data
             
-            st.info(f"📧 **Email:**\n{user.email}")
-            st.success(f"👤 **Name:**\n{p_data.get('email').split('@')[0].capitalize()}")
+            st.markdown(f"📧 **Mail ID:**\n`{user.email}`")
+            st.markdown(f"👤 **Name:**\n{user.email.split('@')[0].title()}")
             
-            with st.expander("💳 Plan & Credits"):
-                st.write(f"**Current Plan:** Free Tier")
-                st.write(f"**Credits Left:** {p_data.get('points')} pts")
-                st.write(f"**Status:** {p_data.get('rank')}")
-                st.progress(p_data.get('points')/1000) # Progress bar for credits
-                
+            st.divider()
+            st.markdown("### 💳 Plan Details")
+            st.info(f"**Current Plan:** Starter (100 Credits)")
+            st.metric("Credits Available", f"{data['points']} pts")
+            st.progress(data['points'] / 100) # Progress bar based on 100 initial credits
+            
+            if st.button("Logout"):
+                supabase.auth.sign_out()
+                del st.session_state['user']
+                st.rerun()
         except Exception:
-            st.error("Login to view full report.")
+            st.error("Could not load profile. Ensure SQL script was run.")
     else:
         st.warning("No user logged in.")
-        if st.button("Go to Login Page"):
-            st.info("Navigate to 'Account' in the sidebar.")
+        st.info("Please login in the 'Account' page to see your report.")
 
-# --- Main App Content ---
+# --- 4. Main Page Content ---
 st.subheader("Free Accounting Education & Tally Automation")
 st.divider()
 
-col_a, col_b, col_c = st.columns(3)
-with col_a:
+c1, c2, c3 = st.columns(3)
+with c1:
     st.markdown("### 📖 Learn")
     st.write("Deep dive into accounting principles.")
-with col_b:
+with c2:
     st.markdown("### 🛠️ Automate")
     st.write("Convert Excel to Tally XML.")
-with col_c:
+with c3:
     st.markdown("### 🏆 Progress")
     st.write("Track your scores.")
