@@ -1,5 +1,5 @@
 streamlit
 pandas
 openpyxl
-supabase
+supabase==2.11.0
 python-dotenv
