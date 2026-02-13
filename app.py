@@ -1,70 +1,29 @@
-import streamlit as st
-from supabase import create_client
+-- 1. Create the profiles table
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid REFERENCES auth.users NOT NULL PRIMARY KEY,
+  email text,
+  points integer DEFAULT 100,
+  rank text DEFAULT 'Starter Plan'
+);
 
-# Project Connection
-URL = "https://aombczanizdhiulwkuhf.supabase.co"
-KEY = st.secrets["SUPABASE_KEY"]
-supabase = create_client(URL, KEY)
+-- 2. Create the automation trigger (for future signups)
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email)
+  VALUES (new.id, new.email);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-# --- CSS for Google-style Profile Icon ---
-st.markdown("""
-    <style>
-    .google-avatar {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        border: 2px solid #4285F4;
-        object-fit: cover;
-        float: right;
-        margin-top: -10px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
-# --- Header with Dynamic Icon ---
-col1, col2 = st.columns([10, 1])
-with col1:
-    st.title("🚀 TallyTools.in")
-with col2:
-    if 'user' in st.session_state:
-        # Initial-based avatar mimicking Google
-        initial = st.session_state['user'].email[0].upper()
-        st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
-    else:
-        st.markdown('<img src="https://ui-avatars.com/api/?name=?&background=cccccc" class="google-avatar">', unsafe_allow_html=True)
+-- 3. FIX FOR YOU: Create your profile manually right now
+INSERT INTO public.profiles (id, email)
+SELECT id, email FROM auth.users
+ON CONFLICT (id) DO NOTHING;
 
-# --- Sidebar Google-style Report ---
-with st.sidebar:
-    st.header("Account Report")
-    if 'user' in st.session_state:
-        user = st.session_state['user']
-        try:
-            # This will now work once the SQL script above is run
-            profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
-            data = profile.data
-            
-            st.markdown(f"📧 **Mail ID:**\n`{user.email}`")
-            st.markdown(f"👤 **Name:**\n{user.email.split('@')[0].title()}")
-            
-            st.divider()
-            st.markdown("### 💳 Plan Details")
-            st.metric("Credits Available", f"{data['points']} pts")
-            st.info(f"**Current Status:** {data['rank']}")
-            st.progress(data['points'] / 100) # Progress bar for the 100 initial credits
-            
-            if st.button("Sign Out"):
-                supabase.auth.sign_out()
-                del st.session_state['user']
-                st.rerun()
-        except Exception:
-            st.warning("Profile not found. Please run the SQL script.")
-    else:
-        st.info("Sign in via the 'Account' page to see your report.")
-
-# --- Main Page Content ---
-st.subheader("Free Accounting Education & Tally Automation")
-st.divider()
-c1, c2, c3 = st.columns(3)
-with c1: st.markdown("### 📖 Learn")
-with c2: st.markdown("### 🛠️ Automate")
-with c3: st.markdown("### 🏆 Progress")
+-- 4. Give everyone the 100 points
+UPDATE public.profiles SET points = 100 WHERE points IS NULL OR points = 0;
