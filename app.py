@@ -6,9 +6,10 @@ URL = "https://aombczanizdhiulwkuhf.supabase.co"
 KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(URL, KEY)
 
+# 1. Page Configuration
 st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
 
-# --- CSS for Google-style Profile Icon ---
+# 2. CSS for Google-style Profile Icon
 st.markdown("""
     <style>
     .google-avatar {
@@ -19,23 +20,25 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- Header with Dynamic Icon ---
-col1, col2 = st.columns([10, 1])
-with col1:
+# 3. Header with Dynamic Profile Icon
+col_h1, col_h2 = st.columns([10, 1])
+with col_h1:
     st.title("🚀 TallyTools.in")
-with col2:
+with col_h2:
     if 'user' in st.session_state:
         # Initial-based avatar mimicking Google
         initial = st.session_state['user'].email[0].upper()
         st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
+    else:
+        st.markdown('<img src="https://ui-avatars.com/api/?name=?&background=cccccc" class="google-avatar">', unsafe_allow_html=True)
 
-# --- Sidebar User Report ---
+# 4. Sidebar Google-style User Report
 with st.sidebar:
     st.header("Account Report")
     if 'user' in st.session_state:
         user = st.session_state['user']
         try:
-            # This fetches the 100 points you just set up in SQL
+            # Fetches the 100 points created via SQL
             profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
             data = profile.data
             
@@ -45,17 +48,31 @@ with st.sidebar:
             st.divider()
             st.markdown("### 💳 Plan Details")
             st.metric("Credits Available", f"{data['points']} pts")
-            st.progress(data['points'] / 100) # Progress bar for the 100 initial credits
+            st.info(f"**Status:** {data['rank']}")
+            st.progress(data['points'] / 100) # Progress bar for initial 100 credits
             
             if st.button("Sign Out"):
                 supabase.auth.sign_out()
                 del st.session_state['user']
                 st.rerun()
         except Exception:
-            # Safety message if SQL wasn't fully applied to your user
-            st.warning("⚠️ Profile not synced. Please re-run the 'Retroactive' part of the SQL script.")
+            st.warning("⚠️ Profile not synced. Ensure you ran the SQL in Supabase.")
     else:
         st.info("Log in to see your account report.")
+        if st.button("Go to Login Page"):
+             st.switch_page("pages/03_Account.py")
 
-# Main Page Content
+# 5. Main Page Content
 st.subheader("Free Accounting Education & Tally Automation")
+st.divider()
+
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown("### 📖 Learning Hub")
+    st.write("Master TallyPrime and Accounting.")
+with c2:
+    st.markdown("### 🛠️ Tally Converter")
+    st.write("Convert Excel/PDF to Tally XML.")
+with c3:
+    st.markdown("### 🏆 My Progress")
+    st.write("Check your credits and certificates.")
