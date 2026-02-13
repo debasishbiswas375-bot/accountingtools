@@ -2,8 +2,9 @@ import streamlit as st
 from supabase import create_client
 
 # Project Details
-URL = "https://aombczanizdhiulwkuhf.supabase.co"
-KEY = st.secrets["SUPABASE_KEY"]
+# Project Details - MUST match your new secrets
+URL = st.secrets["SUPABASE_URL"] 
+KEY = st.secrets["SUPABASE_KEY"] 
 supabase = create_client(URL, KEY)
 
 st.title("👤 My TallyTools Account")
