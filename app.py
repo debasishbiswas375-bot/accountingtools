@@ -3,7 +3,7 @@ from supabase import create_client
 
 # Project Connection
 URL = "https://aombczanizdhiulwkuhf.supabase.co"
-KEY = st.secrets["SUPABASE_KEY"]
+KEY = st.secrets["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvbWJjemFuaXpkaGl1bHdrdWhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MDkwMzEsImV4cCI6MjA4NjM4NTAzMX0.GFAU-u5QhtBgkkqBYqE3LHqg6NdGLPTEUwQnIxCZs9Q"]
 supabase = create_client(URL, KEY)
 
 # CSS for the Google-style profile icon
