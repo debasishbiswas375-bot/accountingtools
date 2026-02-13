@@ -1,29 +1,53 @@
--- 1. Create the profiles table
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id uuid REFERENCES auth.users NOT NULL PRIMARY KEY,
-  email text,
-  points integer DEFAULT 100,
-  rank text DEFAULT 'Starter Plan'
-);
+import streamlit as st
+from supabase import create_client
 
--- 2. Create the automation trigger (for future signups)
-CREATE OR REPLACE FUNCTION public.handle_new_user() 
-RETURNS trigger AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email)
-  VALUES (new.id, new.email);
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+# Project Connection
+URL = "https://aombczanizdhiulwkuhf.supabase.co"
+KEY = st.secrets["SUPABASE_KEY"]
+supabase = create_client(URL, KEY)
 
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
 
--- 3. FIX FOR YOU: Create your profile manually right now
-INSERT INTO public.profiles (id, email)
-SELECT id, email FROM auth.users
-ON CONFLICT (id) DO NOTHING;
+# --- CSS for Google-style Profile Icon ---
+st.markdown("""
+    <style>
+    .google-avatar {
+        width: 45px; height: 45px; border-radius: 50%;
+        border: 2px solid #4285F4; object-fit: cover;
+        float: right; margin-top: -10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
--- 4. Give everyone the 100 points
-UPDATE public.profiles SET points = 100 WHERE points IS NULL OR points = 0;
+# --- Header with Dynamic Icon ---
+col1, col2 = st.columns([10, 1])
+with col1:
+    st.title("🚀 TallyTools.in")
+with col2:
+    if 'user' in st.session_state:
+        initial = st.session_state['user'].email[0].upper()
+        st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
+
+# --- Sidebar User Report ---
+with st.sidebar:
+    st.header("Account Report")
+    if 'user' in st.session_state:
+        user = st.session_state['user']
+        try:
+            profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
+            data = profile.data
+            st.markdown(f"📧 **Mail ID:**\n`{user.email}`")
+            st.markdown(f"👤 **Name:**\n{user.email.split('@')[0].title()}")
+            st.divider()
+            st.metric("Credits Available", f"{data['points']} pts")
+            st.progress(data['points'] / 100)
+            if st.button("Sign Out"):
+                supabase.auth.sign_out()
+                del st.session_state['user']
+                st.rerun()
+        except:
+            st.warning("Profile not found in database.")
+    else:
+        st.info("Please login to see your report.")
+
+st.subheader("Free Accounting Education & Tally Automation")
