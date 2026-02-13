@@ -1,77 +1,63 @@
 import streamlit as st
 from supabase import create_client
 
-# Project Connection
+# Connection details
 URL = "https://aombczanizdhiulwkuhf.supabase.co"
 KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(URL, KEY)
 
-# --- 1. CSS for Google-style Profile Icon ---
+st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
+
+# --- CSS for Google Logo ---
 st.markdown("""
     <style>
-    .google-avatar {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        border: 2px solid #4285F4; /* Google Blue */
-        object-fit: cover;
-        float: right;
+    .profile-pic {
+        width: 42px; height: 42px; border-radius: 50%;
+        border: 2px solid #4285F4; object-fit: cover; float: right;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. Top Header with Dynamic Icon ---
-col1, col2 = st.columns([10, 1])
-with col1:
+# --- Header with Logo ---
+c1, c2 = st.columns([10, 1])
+with c1:
     st.title("🚀 TallyTools.in")
-with col2:
+with c2:
     if 'user' in st.session_state:
-        # Initial-based avatar
+        # Use email initial for the Google-style icon
         initial = st.session_state['user'].email[0].upper()
-        st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
-    else:
-        st.markdown('<img src="https://ui-avatars.com/api/?name=?&background=cccccc" class="google-avatar">', unsafe_allow_html=True)
+        st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="profile-pic">', unsafe_allow_html=True)
 
-# --- 3. Sidebar User Report ---
+# --- Sidebar User Report ---
 with st.sidebar:
     st.header("Account Report")
     if 'user' in st.session_state:
         user = st.session_state['user']
         try:
-            # Fetch real-time data
-            profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
-            data = profile.data
+            # Fetch the 100 points we just set up in SQL
+            p = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
             
-            st.markdown(f"📧 **Mail ID:**\n`{user.email}`")
-            st.markdown(f"👤 **Name:**\n{user.email.split('@')[0].title()}")
+            st.write(f"📧 **Mail ID:**\n{user.email}")
+            st.write(f"👤 **Name:**\n{user.email.split('@')[0].title()}")
             
             st.divider()
-            st.markdown("### 💳 Plan Details")
-            st.info(f"**Current Plan:** Starter (100 Credits)")
-            st.metric("Credits Available", f"{data['points']} pts")
-            st.progress(data['points'] / 100) # Progress bar based on 100 initial credits
+            st.info(f"**Plan:** {p.data['rank']}")
+            st.metric("Credits Available", f"{p.data['points']} pts")
+            st.progress(p.data['points'] / 100)
             
-            if st.button("Logout"):
+            if st.button("Sign Out"):
                 supabase.auth.sign_out()
                 del st.session_state['user']
                 st.rerun()
-        except Exception:
-            st.error("Could not load profile. Ensure SQL script was run.")
+        except:
+            st.warning("Please run the SQL script in Supabase.")
     else:
-        st.warning("No user logged in.")
-        st.info("Please login in the 'Account' page to see your report.")
+        st.write("Logged out")
 
-# --- 4. Main Page Content ---
+# --- Main Content ---
 st.subheader("Free Accounting Education & Tally Automation")
 st.divider()
-
-c1, c2, c3 = st.columns(3)
-with c1:
-    st.markdown("### 📖 Learn")
-    st.write("Deep dive into accounting principles.")
-with c2:
-    st.markdown("### 🛠️ Automate")
-    st.write("Convert Excel to Tally XML.")
-with c3:
-    st.markdown("### 🏆 Progress")
-    st.write("Track your scores.")
+cols = st.columns(3)
+cols[0].markdown("### 📖 Learn")
+cols[1].markdown("### 🛠️ Automate")
+cols[2].markdown("### 🏆 Progress")
