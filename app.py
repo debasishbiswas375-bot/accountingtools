@@ -3,36 +3,42 @@ from supabase import create_client
 
 # Project Connection
 URL = "https://aombczanizdhiulwkuhf.supabase.co"
-KEY KEY = st.secrets["SUPABASE_KEY"]
+# FIXED: Only one 'KEY' variable name here
+KEY = st.secrets["SUPABASE_KEY"] 
 supabase = create_client(URL, KEY)
 
-# CSS for the Google-style profile icon
-st.markdown("""<style>.google-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #4285F4; float: right; }</style>""", unsafe_allow_html=True)
+st.set_page_config(page_title="TallyTools.in", page_icon="🚀", layout="wide")
 
-# Top Header
+# CSS for Google-style Profile Icon
+st.markdown("""<style>.google-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #4285F4; float: right; margin-top: -10px;}</style>""", unsafe_allow_html=True)
+
+# Header with Icon
 col1, col2 = st.columns([10, 1])
 with col1: st.title("🚀 TallyTools.in")
 with col2:
     if 'user' in st.session_state:
-        # Dynamic avatar based on your email
         initial = st.session_state['user'].email[0].upper()
         st.markdown(f'<img src="https://ui-avatars.com/api/?name={initial}&background=random" class="google-avatar">', unsafe_allow_html=True)
 
-# Sidebar User Report showing your 100 points
+# Sidebar Account Report
 with st.sidebar:
     st.header("Account Report")
     if 'user' in st.session_state:
         user = st.session_state['user']
-        # This fetches the points from the SQL table you created
         try:
+            # Fetches the points you created in Supabase SQL
             profile = supabase.table("profiles").select("*").eq("id", user.id).single().execute()
-            if profile.data:
-                st.write(f"📧 **Mail:** {user.email}")
-                st.metric("Credits Available", f"{profile.data['points']} pts")
-                st.progress(profile.data['points'] / 100)
+            data = profile.data
+            st.markdown(f"📧 **Mail:**\n`{user.email}`")
+            st.metric("Credits Available", f"{data['points']} pts")
+            st.progress(data['points'] / 100)
             if st.button("Sign Out"):
                 supabase.auth.sign_out()
                 del st.session_state['user']
                 st.rerun()
         except:
             st.warning("Profile syncing... please refresh.")
+    else:
+        st.info("Log in to see your report.")
+
+st.subheader("Free Accounting Education & Tally Automation")
